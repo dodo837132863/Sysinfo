@@ -5,7 +5,10 @@ import platform
 from datetime import datetime
 import time
 import psutil
+import difflib
+from host.Tool_hashlib import get_md5
 # Create your views here.
+
 def index(request):
     try:
         # 如果是Linux系统,执行下面内容
@@ -70,3 +73,20 @@ def users(requests):
         }
         all_users.append(one_user)
     return  render(requests, 'host/users.html', {'users':all_users})
+
+def diff(request):
+    print("客户端请求的方法: ", request.method)
+    if request.method == 'POST':
+        files = request.FILES
+        content1 = files.get('filename1').read()
+        content2 = files.get('filename2').read()
+        if get_md5(content1) == get_md5(content2):
+            return  HttpResponse("Consistent file content")
+        else:
+            hdiff = difflib.HtmlDiff()
+            content1 = content1.decode('utf-8').splitlines()
+            content2 = content2.decode('utf-8').splitlines()
+            result = hdiff.make_file(content1,content2)
+            return HttpResponse(result)
+
+    return render(request, 'host/diff.html')
